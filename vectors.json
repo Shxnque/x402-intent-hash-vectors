@@ -1,0 +1,155 @@
+{
+  "spec": "x402 pre-settle intent_hash conformance vectors",
+  "version": "1",
+  "source_thread": "https://github.com/x402-foundation/x402/issues/3506",
+  "algorithm": "intent_hash = sha256(JCS(canonical_intent)) as lower-case hex",
+  "rules": [
+    "canonicalisation: JCS (RFC 8785) profile over string/integer fields",
+    "amount: positive integer minor-units ONLY (no floats, no decimal strings, no bool)",
+    "chain: CAIP-2; asset: CAIP-19; payer/payee: CAIP-10",
+    "asset CAIP-19 chain component MUST equal the declared CAIP-2 chain",
+    "unknown/missing fields fail closed"
+  ],
+  "vectors": [
+    {
+      "name": "V1-baseline-base-usdc",
+      "equivalence_class": "canon-A",
+      "intent": {
+        "schema_version": "1",
+        "chain": "eip155:8453",
+        "asset": "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amount": 1500000,
+        "payer": "eip155:8453:0xA0b8991216c7f43F7F7cC0C6D2f3aBc3D2b6a111",
+        "payee": "eip155:8453:0xF977814e90dA44bFA03b6295A0616a897441aceC",
+        "nonce": 7,
+        "expiry": 1789730000
+      },
+      "expect": { "result": "valid", "intent_hash": "b84330213309a9b9aa707e177d521155e722806f43897337c82b5ebf81f0b02c" }
+    },
+    {
+      "name": "V2-canonical-reorder-equals-V1",
+      "equivalence_class": "canon-A",
+      "intent": {
+        "expiry": 1789730000,
+        "payee": "eip155:8453:0xF977814e90dA44bFA03b6295A0616a897441aceC",
+        "payer": "eip155:8453:0xA0b8991216c7f43F7F7cC0C6D2f3aBc3D2b6a111",
+        "amount": 1500000,
+        "asset": "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "chain": "eip155:8453",
+        "nonce": 7,
+        "schema_version": "1"
+      },
+      "expect": { "result": "valid", "intent_hash": "b84330213309a9b9aa707e177d521155e722806f43897337c82b5ebf81f0b02c" }
+    },
+    {
+      "name": "V3-different-amount-different-hash",
+      "intent": {
+        "schema_version": "1",
+        "chain": "eip155:8453",
+        "asset": "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amount": 2500000,
+        "payer": "eip155:8453:0xA0b8991216c7f43F7F7cC0C6D2f3aBc3D2b6a111",
+        "payee": "eip155:8453:0xF977814e90dA44bFA03b6295A0616a897441aceC",
+        "nonce": 7,
+        "expiry": 1789730000
+      },
+      "expect": { "result": "valid", "intent_hash": "68765b897b787dcea6aea2d70499f7802c09ebbc7d76012c46fcf129fe37cc73" }
+    },
+    {
+      "name": "N1-amount-float-rejected",
+      "intent": {
+        "schema_version": "1", "chain": "eip155:8453",
+        "asset": "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amount": 1.5,
+        "payer": "eip155:8453:0xA0b8991216c7f43F7F7cC0C6D2f3aBc3D2b6a111",
+        "payee": "eip155:8453:0xF977814e90dA44bFA03b6295A0616a897441aceC",
+        "nonce": 7, "expiry": 1789730000
+      },
+      "expect": { "result": "reject", "reason": "amount must be integer minor-units" }
+    },
+    {
+      "name": "N2-amount-decimal-string-rejected",
+      "intent": {
+        "schema_version": "1", "chain": "eip155:8453",
+        "asset": "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amount": "1500000",
+        "payer": "eip155:8453:0xA0b8991216c7f43F7F7cC0C6D2f3aBc3D2b6a111",
+        "payee": "eip155:8453:0xF977814e90dA44bFA03b6295A0616a897441aceC",
+        "nonce": 7, "expiry": 1789730000
+      },
+      "expect": { "result": "reject", "reason": "amount must be integer, not string" }
+    },
+    {
+      "name": "N3-amount-negative-rejected",
+      "intent": {
+        "schema_version": "1", "chain": "eip155:8453",
+        "asset": "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amount": -100,
+        "payer": "eip155:8453:0xA0b8991216c7f43F7F7cC0C6D2f3aBc3D2b6a111",
+        "payee": "eip155:8453:0xF977814e90dA44bFA03b6295A0616a897441aceC",
+        "nonce": 7, "expiry": 1789730000
+      },
+      "expect": { "result": "reject", "reason": "amount must be positive" }
+    },
+    {
+      "name": "N4-chain-not-caip2-rejected",
+      "intent": {
+        "schema_version": "1", "chain": "base",
+        "asset": "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amount": 1500000,
+        "payer": "eip155:8453:0xA0b8991216c7f43F7F7cC0C6D2f3aBc3D2b6a111",
+        "payee": "eip155:8453:0xF977814e90dA44bFA03b6295A0616a897441aceC",
+        "nonce": 7, "expiry": 1789730000
+      },
+      "expect": { "result": "reject", "reason": "chain must be CAIP-2" }
+    },
+    {
+      "name": "N5-asset-chain-mismatch-rejected",
+      "intent": {
+        "schema_version": "1", "chain": "eip155:8453",
+        "asset": "eip155:1/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amount": 1500000,
+        "payer": "eip155:8453:0xA0b8991216c7f43F7F7cC0C6D2f3aBc3D2b6a111",
+        "payee": "eip155:8453:0xF977814e90dA44bFA03b6295A0616a897441aceC",
+        "nonce": 7, "expiry": 1789730000
+      },
+      "expect": { "result": "reject", "reason": "asset chain must equal declared chain (no cross-chain smuggling)" }
+    },
+    {
+      "name": "N6-missing-expiry-rejected",
+      "intent": {
+        "schema_version": "1", "chain": "eip155:8453",
+        "asset": "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amount": 1500000,
+        "payer": "eip155:8453:0xA0b8991216c7f43F7F7cC0C6D2f3aBc3D2b6a111",
+        "payee": "eip155:8453:0xF977814e90dA44bFA03b6295A0616a897441aceC",
+        "nonce": 7
+      },
+      "expect": { "result": "reject", "reason": "missing required field expiry" }
+    },
+    {
+      "name": "N7-unknown-field-rejected",
+      "intent": {
+        "schema_version": "1", "chain": "eip155:8453",
+        "asset": "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amount": 1500000,
+        "payer": "eip155:8453:0xA0b8991216c7f43F7F7cC0C6D2f3aBc3D2b6a111",
+        "payee": "eip155:8453:0xF977814e90dA44bFA03b6295A0616a897441aceC",
+        "nonce": 7, "expiry": 1789730000, "memo": "pay for api call"
+      },
+      "expect": { "result": "reject", "reason": "unknown field memo not permitted" }
+    },
+    {
+      "name": "N8-amount-bool-rejected",
+      "intent": {
+        "schema_version": "1", "chain": "eip155:8453",
+        "asset": "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amount": true,
+        "payer": "eip155:8453:0xA0b8991216c7f43F7F7cC0C6D2f3aBc3D2b6a111",
+        "payee": "eip155:8453:0xF977814e90dA44bFA03b6295A0616a897441aceC",
+        "nonce": 7, "expiry": 1789730000
+      },
+      "expect": { "result": "reject", "reason": "amount must not be bool" }
+    }
+  ]
+}
